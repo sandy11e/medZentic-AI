@@ -3,33 +3,35 @@ import requests
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
-st.set_page_config(layout="wide", page_title="MedZentic AI — Assistant", page_icon="")
+st.set_page_config(layout="wide", page_title="MedZentic — Assistant", page_icon="🫀")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
 
 :root {
-    --bg:      #030507;
-    --surface: #080d12;
-    --surface2:#0d1420;
-    --border:  rgba(255,255,255,0.07);
-    --text:    #f0f4f8;
-    --muted:   rgba(240,244,248,0.35);
-    --pulse:   #4af0c4;
-    --blue:    #4a90f0;
-    --mono:    'Space Mono', monospace;
-    --sans:    'Outfit', sans-serif;
+  --cream:   #F7F3EE;
+  --warm:    #EDE8E0;
+  --sage:    #7B9E87;
+  --sage-lt: #EAF2EC;
+  --clay:    #C4856A;
+  --clay-lt: #F8EDE7;
+  --ink:     #1C1917;
+  --ink2:    #44403C;
+  --dust:    #A8A29E;
+  --white:   #FEFCFA;
+  --user-bg: #1C1917;
+  --ai-bg:   #FEFCFA;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stApp"] {
-    background: var(--bg) !important;
-    color: var(--text) !important;
-    font-family: var(--sans) !important;
+  background: var(--cream) !important;
+  color: var(--ink) !important;
+  font-family: 'DM Sans', sans-serif !important;
 }
 
 #MainMenu, footer, header,
@@ -40,243 +42,181 @@ section[data-testid="stSidebar"] { display: none !important; }
 
 [data-testid="stAppViewContainer"] > .main { padding: 0 !important; }
 [data-testid="stAppViewContainer"] > .main > div {
-    padding: 0 48px 100px !important;
-    max-width: 900px !important;
-    margin: 0 auto !important;
+  padding: 0 48px 100px !important;
+  max-width: 860px !important;
+  margin: 0 auto !important;
 }
 
-body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+/* ── NAV ── */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--warm);
+  margin-bottom: 52px;
+  animation: fadeDown 0.5s ease both;
 }
-body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 48px 48px;
-}
+.nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-mark { width: 34px; height: 34px; background: var(--sage); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.nav-name { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
+.nav-name em { font-style: normal; color: var(--sage); }
+.nav-center { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dust); }
+.nav-status { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: var(--sage); }
+.nav-dot { width: 7px; height: 7px; background: var(--sage); border-radius: 50%; animation: breathe 3s ease-in-out infinite; }
+@keyframes breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
 
-/* NAV */
-.mz-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 30px 0; border-bottom: 1px solid var(--border);
-    margin-bottom: 52px;
-    position: relative; z-index: 10;
-    animation: fadeDown 0.7s ease both;
-}
-.mz-wordmark { font-family: var(--sans); font-weight: 900; font-size: 16px; letter-spacing: 4px; text-transform: uppercase; color: var(--text); }
-.mz-wordmark span { color: var(--pulse); }
-.mz-nav-center { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
-.mz-status-dot {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--pulse);
-}
-.mz-status-dot::before {
-    content: ''; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--pulse); box-shadow: 0 0 8px var(--pulse);
-    animation: blink 1.4s ease-in-out infinite;
-}
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
-
-/* PAGE HEADER */
+/* ── CHAT HEADER ── */
 .chat-header {
-    text-align: center; padding: 8px 0 44px;
-    animation: fadeUp 0.7s ease 0.1s both;
-    position: relative; z-index: 2;
+  text-align: center;
+  padding: 8px 0 44px;
+  animation: fadeUp 0.6s ease 0.1s both;
 }
-.chat-header-ring {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: 1px solid rgba(74,240,196,0.25);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    position: relative;
-    animation: ringPulse 3s ease-in-out infinite;
+.chat-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 28px;
+  box-shadow: 0 8px 24px rgba(28,25,23,0.2);
+  position: relative;
 }
-.chat-header-ring::before {
-    content: ''; position: absolute;
-    width: 100%; height: 100%; border-radius: 50%;
-    border: 1px solid rgba(74,240,196,0.1);
-    animation: ringExpand 3s ease-in-out infinite;
+.chat-avatar::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(123,158,135,0.3);
+  animation: ringPulse 3s ease-in-out infinite;
 }
-.chat-header-cross {
-    width: 22px; height: 22px; position: relative;
-}
-.chat-header-cross::before,
-.chat-header-cross::after {
-    content: ''; position: absolute;
-    background: var(--pulse); border-radius: 1px;
-}
-.chat-header-cross::before { width: 2px; height: 22px; top: 0; left: 50%; transform: translateX(-50%); }
-.chat-header-cross::after  { width: 22px; height: 2px; top: 50%; left: 0; transform: translateY(-50%); }
 @keyframes ringPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(74,240,196,0.25); }
-    50%      { box-shadow: 0 0 0 12px rgba(74,240,196,0); }
+  0%,100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.12); opacity: 0.15; }
 }
-@keyframes ringExpand {
-    0%   { transform: scale(1);   opacity: 0.5; }
-    100% { transform: scale(1.8); opacity: 0; }
-}
-
 .chat-h1 {
-    font-family: var(--sans); font-size: 30px; font-weight: 900;
-    letter-spacing: -1px; color: var(--text); margin-bottom: 10px;
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; color: var(--ink);
+  letter-spacing: -0.5px; margin-bottom: 8px;
 }
 .chat-sub {
-    font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--dust);
 }
 
-/* CHAT HISTORY */
-.chat-wrap {
-    display: flex; flex-direction: column; gap: 20px;
-    margin-bottom: 36px;
-    position: relative; z-index: 2;
-    animation: fadeUp 0.7s ease 0.2s both;
-}
-.msg-row { display: flex; gap: 14px; align-items: flex-start; animation: msgIn 0.35s ease both; }
-.msg-row.user { flex-direction: row-reverse; }
-@keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+/* ── MESSAGES ── */
+.msgs { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; animation: fadeUp 0.6s ease 0.15s both; }
 
-.msg-avatar {
-    width: 34px; height: 34px; border-radius: 2px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
-    text-transform: uppercase;
-}
-.msg-avatar.user-av {
-    background: rgba(74,144,240,0.12); border: 1px solid rgba(74,144,240,0.25); color: var(--blue);
-}
-.msg-avatar.ai-av {
-    background: rgba(74,240,196,0.08); border: 1px solid rgba(74,240,196,0.2); color: var(--pulse);
-}
+.msg { display: flex; gap: 12px; align-items: flex-start; }
+.msg.user { flex-direction: row-reverse; }
 
-.msg-body { max-width: 78%; }
-.msg-sender {
-    font-family: var(--mono); font-size: 8px; letter-spacing: 2px;
-    text-transform: uppercase; margin-bottom: 8px;
+.msg-av {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.5px;
+  font-weight: 400;
 }
-.msg-row.user  .msg-sender { color: var(--blue);  text-align: right; }
-.msg-row.ai    .msg-sender { color: var(--pulse); }
+.msg-av.user-av { background: var(--ink); color: rgba(255,255,255,0.6); }
+.msg-av.ai-av { background: var(--sage); color: white; }
 
-.msg-bubble {
-    padding: 14px 18px; border-radius: 2px;
-    font-size: 13px; line-height: 1.8; font-weight: 300;
+.msg-content { max-width: 80%; }
+.msg-who {
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 7px;
 }
-.msg-bubble.user-bub {
-    background: rgba(74,144,240,0.08);
-    border: 1px solid rgba(74,144,240,0.18);
-    color: var(--text);
-    border-top-right-radius: 0;
+.msg.user .msg-who { color: var(--dust); text-align: right; }
+.msg.ai   .msg-who { color: var(--sage); }
+
+.bubble {
+  padding: 14px 18px; border-radius: 18px;
+  font-size: 14px; line-height: 1.75; font-weight: 300;
 }
-.msg-bubble.ai-bub {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 2px solid rgba(74,240,196,0.4);
-    color: rgba(240,244,248,0.8);
-    border-top-left-radius: 0;
+.user-bubble {
+  background: var(--ink); color: rgba(255,255,255,0.85);
+  border-bottom-right-radius: 4px;
+}
+.ai-bubble {
+  background: var(--white); color: var(--ink2);
+  border: 1px solid var(--warm);
+  border-bottom-left-radius: 4px;
+  border-left: 2.5px solid var(--sage);
 }
 
-/* EMPTY STATE */
-.chat-empty {
-    border: 1px dashed rgba(255,255,255,0.06);
-    border-radius: 3px; padding: 60px 40px;
-    text-align: center; margin-bottom: 36px;
-    position: relative; z-index: 2;
-    animation: fadeUp 0.7s ease 0.25s both;
+/* ── EMPTY STATE ── */
+.empty-state {
+  border: 1.5px dashed rgba(168,162,158,0.3);
+  border-radius: 20px; padding: 60px 40px;
+  text-align: center; margin-bottom: 32px;
+  animation: fadeUp 0.6s ease 0.2s both;
 }
-.chat-empty-pulse {
-    width: 40px; height: 40px; border-radius: 50%;
-    border: 1px solid rgba(74,240,196,0.2);
-    margin: 0 auto 18px;
-    animation: ringPulse 2.5s ease-in-out infinite;
-}
-.chat-empty-title {
-    font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
-    text-transform: uppercase; color: var(--muted);
-}
+.empty-icon { font-size: 36px; margin-bottom: 14px; }
+.empty-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--dust); }
 
-/* INPUT AREA */
-.input-area {
-    position: relative; z-index: 2;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 3px; padding: 3px 3px 3px 20px;
-    display: flex; align-items: center; gap: 10px;
-    transition: border-color 0.3s;
-    animation: fadeUp 0.7s ease 0.3s both;
+/* ── INPUT AREA ── */
+.input-wrap {
+  background: var(--white);
+  border: 1px solid var(--warm);
+  border-radius: 100px;
+  padding: 4px 4px 4px 24px;
+  display: flex; align-items: center; gap: 10px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  animation: fadeUp 0.6s ease 0.25s both;
+  box-shadow: 0 2px 12px rgba(28,25,23,0.04);
 }
-.input-area:focus-within {
-    border-color: rgba(74,240,196,0.3);
-    box-shadow: 0 0 20px rgba(74,240,196,0.04);
+.input-wrap:focus-within {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 4px rgba(123,158,135,0.1), 0 2px 12px rgba(28,25,23,0.04);
 }
 
 div[data-testid="stTextInput"] input {
-    background: transparent !important;
-    border: none !important; box-shadow: none !important; outline: none !important;
-    color: var(--text) !important;
-    font-family: var(--mono) !important; font-size: 12px !important;
-    letter-spacing: 0.5px !important; padding: 10px 0 !important;
+  background: transparent !important;
+  border: none !important; box-shadow: none !important; outline: none !important;
+  color: var(--ink) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 14px !important; padding: 10px 0 !important;
 }
-div[data-testid="stTextInput"] input::placeholder { color: var(--muted) !important; }
-div[data-testid="stTextInput"] > div {
-    background: transparent !important; border: none !important; box-shadow: none !important;
-}
+div[data-testid="stTextInput"] input::placeholder { color: var(--dust) !important; }
+div[data-testid="stTextInput"] > div { background: transparent !important; border: none !important; box-shadow: none !important; }
 
-/* BUTTONS */
+/* ── BUTTONS ── */
 div[data-testid="stButton"] > button {
-    background: var(--text) !important; color: var(--bg) !important;
-    font-family: var(--sans) !important; font-weight: 700 !important;
-    font-size: 11px !important; letter-spacing: 2.5px !important;
-    text-transform: uppercase !important;
-    border: none !important; border-radius: 2px !important;
-    padding: 14px 28px !important;
-    transition: all 0.25s ease !important;
+  background: var(--sage) !important; color: white !important;
+  font-family: 'DM Sans', sans-serif !important; font-weight: 500 !important;
+  font-size: 14px !important; border: none !important;
+  border-radius: 100px !important; padding: 13px 28px !important;
+  box-shadow: 0 4px 14px rgba(123,158,135,0.3) !important;
+  transition: all 0.2s ease !important; white-space: nowrap !important;
 }
 div[data-testid="stButton"] > button:hover {
-    background: var(--pulse) !important; color: var(--bg) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 24px rgba(74,240,196,0.25) !important;
+  background: #6a8f76 !important; transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(123,158,135,0.4) !important;
 }
-/* Clear — ghost style */
 div[data-testid="stButton"]:last-of-type > button {
-    background: transparent !important; color: var(--muted) !important;
-    border: 1px solid var(--border) !important;
-    box-shadow: none !important;
+  background: transparent !important; color: var(--dust) !important;
+  border: 1px solid var(--warm) !important; box-shadow: none !important;
 }
 div[data-testid="stButton"]:last-of-type > button:hover {
-    background: rgba(255,255,255,0.04) !important;
-    color: var(--text) !important; transform: none !important;
-    box-shadow: none !important;
+  background: var(--warm) !important; color: var(--ink) !important;
+  transform: none !important; box-shadow: none !important;
 }
 
-[data-testid="stAlert"] {
-    background: transparent !important; border-radius: 2px !important;
-    border-left-width: 2px !important;
-    font-family: var(--mono) !important; font-size: 11px !important;
-}
+[data-testid="stAlert"] { border-radius: 12px !important; font-size: 13px !important; }
+hr { border: none !important; height: 1px !important; background: var(--warm) !important; margin: 28px 0 !important; }
 
-hr {
-    border: none !important; height: 1px !important;
-    background: var(--border) !important; margin: 32px 0 !important;
-}
-
-@keyframes fadeUp   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
-@keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
 </style>
 """, unsafe_allow_html=True)
 
-# ── NAV ────────────────────────────────────────────────────
+# NAV
 st.markdown("""
-<div class="mz-nav">
-  <div class="mz-wordmark">Med<span>Zentic</span></div>
-  <div class="mz-nav-center">AI Medical Assistant</div>
-  <div class="mz-status-dot">AI Online</div>
+<div class="nav">
+  <div class="nav-logo">
+    <div class="nav-mark">🫀</div>
+    <div class="nav-name">Med<em>Zentic</em></div>
+  </div>
+  <div class="nav-center">AI Medical Assistant</div>
+  <div class="nav-status"><div class="nav-dot"></div>AI Online</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── GUARD ──────────────────────────────────────────────────
+# GUARD
 if "analysis_data" not in st.session_state:
     st.error("No health analysis found. Please upload a report first.")
     if st.button("Return to Dashboard"):
@@ -284,71 +224,70 @@ if "analysis_data" not in st.session_state:
     st.stop()
 
 analysis_data = st.session_state["analysis_data"]
-
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# ── HEADER ─────────────────────────────────────────────────
+# HEADER
 st.markdown("""
 <div class="chat-header">
-  <div class="chat-header-ring"><div class="chat-header-cross"></div></div>
+  <div class="chat-avatar">🩺</div>
   <div class="chat-h1">AI Medical Assistant</div>
   <div class="chat-sub">// Ask questions about your health report — plain language responses</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── MESSAGES ───────────────────────────────────────────────
+# MESSAGES
 if st.session_state.chat_history:
-    html = '<div class="chat-wrap">'
+    html = '<div class="msgs">'
     for chat in st.session_state.chat_history:
         u = chat['user'].replace("<","&lt;").replace(">","&gt;")
         a = chat['assistant'].replace("<","&lt;").replace(">","&gt;")
         html += f"""
-        <div class="msg-row user">
-          <div class="msg-avatar user-av">You</div>
-          <div class="msg-body">
-            <div class="msg-sender">Patient</div>
-            <div class="msg-bubble user-bub">{u}</div>
+        <div class="msg user">
+          <div class="msg-av user-av">You</div>
+          <div class="msg-content">
+            <div class="msg-who">Patient</div>
+            <div class="bubble user-bubble">{u}</div>
           </div>
         </div>
-        <div class="msg-row ai">
-          <div class="msg-avatar ai-av">AI</div>
-          <div class="msg-body">
-            <div class="msg-sender">MedZentic AI</div>
-            <div class="msg-bubble ai-bub">{a}</div>
+        <div class="msg ai">
+          <div class="msg-av ai-av">AI</div>
+          <div class="msg-content">
+            <div class="msg-who">MedZentic AI</div>
+            <div class="bubble ai-bubble">{a}</div>
           </div>
-        </div>
-        """
+        </div>"""
     html += '</div>'
     st.markdown(html, unsafe_allow_html=True)
 else:
     st.markdown("""
-    <div class="chat-empty">
-      <div class="chat-empty-pulse"></div>
-      <div class="chat-empty-title">No messages yet — ask anything about your report</div>
+    <div class="empty-state">
+      <div class="empty-icon">💬</div>
+      <div class="empty-title">No messages yet — ask anything about your report</div>
     </div>
     """, unsafe_allow_html=True)
 
 st.divider()
 
-# ── INPUT ──────────────────────────────────────────────────
+# INPUT
+st.markdown('<div class="input-wrap">', unsafe_allow_html=True)
 user_input = st.text_input(
     label="message",
     placeholder="e.g. What does my glucose level mean?",
     label_visibility="collapsed"
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
 c1, c2 = st.columns([3, 1])
 send  = c1.button("Send Message",  use_container_width=True)
 clear = c2.button("Clear Chat",    use_container_width=True)
 
-# ── BACKEND (untouched) ────────────────────────────────────
 if clear:
     st.session_state.chat_history = []
     st.rerun()
 
 if send and user_input:
-    with st.spinner("Analyzing..."):
+    with st.spinner("Thinking…"):
         response = requests.post(
             f"{BACKEND_URL}/chat",
             json={
@@ -357,7 +296,6 @@ if send and user_input:
                 "history": st.session_state.chat_history
             }
         )
-
     if response.status_code == 200:
         answer = response.json()["answer"]
         st.session_state.chat_history.append({"user": user_input, "assistant": answer})
